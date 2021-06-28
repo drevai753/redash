@@ -220,20 +220,24 @@ class Parameters {
   }
 
   parseQuery() {
-    const fallback = () => map(this.query.options.parameters, i => i.name);
-
     let parameters = [];
-    if (this.query.query !== undefined) {
-      try {
-        const parts = Mustache.parse(this.query.query);
-        parameters = uniq(collectParams(parts));
-      } catch (e) {
-        logger("Failed parsing parameters: ", e);
-        // Return current parameters so we don't reset the list
+    const fallback = () => map(this.query.options.parameters, i => i.name);
+    
+    if (this.query.is_from_source) {
+      parameters = fallback();
+    } else {
+      if (this.query.query !== undefined) {
+        try {
+          const parts = Mustache.parse(this.query.query);
+          parameters = uniq(collectParams(parts));
+        } catch (e) {
+          logger("Failed parsing parameters: ", e);
+          // Return current parameters so we don't reset the list
+          parameters = fallback();
+        }
+      } else {
         parameters = fallback();
       }
-    } else {
-      parameters = fallback();
     }
 
     return parameters;

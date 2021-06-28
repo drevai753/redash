@@ -40,7 +40,7 @@ from redash.utils import (
     sentry,
     gen_query_hash)
 from redash.utils.configuration import ConfigurationContainer
-from redash.models.parameterized_query import ParameterizedQuery
+from redash.models.parameterized_query import ParameterizedQuery, load_query_parameters
 
 from .base import db, gfk_type, Column, GFKBase, SearchBaseQuery, key_type, primary_key
 from .changes import ChangeTrackingMixin, Change  # noqa
@@ -868,7 +868,11 @@ class Query(ChangeTrackingMixin, TimestampMixin, BelongsToOrgMixin, db.Model):
     def update_query_hash(self):
         should_apply_auto_limit = self.options.get("apply_auto_limit", False) if self.options else False
         query_runner = self.data_source.query_runner if self.data_source else BaseQueryRunner({})
-        self.query_hash = query_runner.gen_query_hash(self.query_text, should_apply_auto_limit)
+        p, is_from_other = load_query_parameters(self)
+        if is_from_other:
+            self.options["parameters"] = p
+        q = self.parameterized.apply({ p["name"]: p["value"] for p in self.parameters})
+        self.query_hash = query_runner.gen_query_hash(q.query, should_apply_auto_limit)
 
 
 @listens_for(Query, "before_insert")

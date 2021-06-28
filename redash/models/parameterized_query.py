@@ -5,7 +5,7 @@ from redash.utils import mustache_render, json_loads
 from redash.permissions import require_access, view_only
 from funcy import distinct
 from dateutil.parser import parse
-
+from redash import models
 
 def _pluck_name_and_value(default_column, row):
     row = {k.lower(): v for k, v in row.items()}
@@ -16,8 +16,6 @@ def _pluck_name_and_value(default_column, row):
 
 
 def _load_result(query_id, org):
-    from redash import models
-
     query = models.Query.get_by_id_and_org(query_id, org)
 
     if query.data_source:
@@ -117,12 +115,47 @@ def _is_value_within_options(value, dropdown_options, allow_list=False):
     return str(value) in dropdown_options
 
 
+def load_query_text(query_text):
+    q = query_text.strip().split("_")
+    if q[0] == "#!query":
+        try:
+            source_query = models.Query.get_by_id(q[1].split(",")[0])
+            return source_query.query_text
+        except Exception as e:
+            pass #if the query text does not refer to a valid query id, we should return the text as is, without an exception
+    else:
+        return query_text
+        
+def load_query_parameters(query):
+    return _load_query_parameters(query.query_text, query.parameters)
+        
+def _load_query_parameters(query_text, orig_parameters):
+    q = query_text.strip().split("_")
+    if orig_parameters is None:
+        orig_parameters = []
+    if q[0] == "#!query":
+        try:
+            source_query = models.Query.get_by_id(q[1].split(",")[0])
+            parameters = source_query.parameters
+            param_dict = { param["name"]: param for param in orig_parameters }
+            for index in range(len(parameters)):
+                param = parameters[index]
+                if param["name"] in param_dict and param_dict[param["name"]]["type"] == param["type"]:
+                    parameters[index] = param_dict[param["name"]]
+            return parameters, True
+        except Exception as e:
+            return orig_parameters, False
+    else:
+        return orig_parameters, False
+
 class ParameterizedQuery(object):
     def __init__(self, template, schema=None, org=None):
-        self.schema = schema or []
+        p, is_from_other = _load_query_parameters(template, schema)
+        self.schema = p if is_from_other else schema or []
         self.org = org
-        self.template = template
-        self.query = template
+        q_str = load_query_text(template)
+        self.template = q_str
+        self.query = q_str
         self.parameters = {}
 
     def apply(self, parameters):
