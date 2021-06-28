@@ -12,8 +12,7 @@ from rq.timeouts import JobTimeoutException
 from redash import models
 from redash.permissions import has_access, view_only
 from redash.utils import json_loads
-from redash.models.parameterized_query import ParameterizedQuery
-
+from redash.models.parameterized_query import ParameterizedQuery, load_query_parameters
 
 from .query_result import (
     serialize_query_result,
@@ -108,6 +107,7 @@ def serialize_query(
     with_user=True,
     with_last_modified_by=True,
 ):
+    p, is_from_source = load_query_parameters(query)
     d = {
         "id": query.id,
         "latest_query_data_id": query.latest_query_data_id,
@@ -122,11 +122,20 @@ def serialize_query(
         "updated_at": query.updated_at,
         "created_at": query.created_at,
         "data_source_id": query.data_source_id,
-        "options": query.options,
+        "options": {},
         "version": query.version,
         "tags": query.tags or [],
         "is_safe": query.parameterized.is_safe,
+        "is_from_source": is_from_source
     }
+    
+    for key in query.options:
+        if key != "parameters":
+            d["options"][key] = query.options[key]
+        elif is_from_source:
+            d["options"]["parameters"] = p
+        else:
+            d["options"]["parameters"] = query.options["parameters"]
 
     if with_user:
         d["user"] = query.user.to_dict()
