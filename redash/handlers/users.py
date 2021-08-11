@@ -225,7 +225,12 @@ class UserResource(BaseResource):
             {"action": "view", "object_id": user_id, "object_type": "user"}
         )
 
-        return user.to_dict(with_api_key=is_admin_or_owner(user_id))
+        usr_d = user.to_dict(with_api_key=is_admin_or_owner(user_id))
+        if is_admin_or_owner:
+            usr_d["history"] = []
+            for h in models.UserHistory.get_history(user_id):
+                usr_d["history"].append(h.to_dict())
+        return usr_d
 
     def post(self, user_id):
         require_admin_or_owner(user_id)

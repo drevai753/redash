@@ -4,6 +4,7 @@ from datetime import datetime
 from flask_mail import Message
 from redash import mail, models, settings
 from redash.models import users
+from redash.models.history import UserHistory
 from redash.version_check import run_version_check
 from redash.worker import job, get_job_logger
 from redash.tasks.worker import Queue
@@ -91,3 +92,6 @@ def get_schema(data_source_id, refresh):
 
 def sync_user_details():
     users.sync_last_active_at()
+
+def clear_old_user_history():
+    UserHistory.delete_old_user_history()

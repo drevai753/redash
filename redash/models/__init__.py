@@ -55,6 +55,7 @@ from .types import (
     pseudo_json_cast_property
 )
 from .users import AccessPermission, AnonymousUser, ApiUser, Group, User  # noqa
+from .history import UserHistory
 
 logger = logging.getLogger(__name__)
 

@@ -16,6 +16,7 @@ from redash.permissions import (
     require_any_of_permission,
     view_only,
 )
+from redash.models.history import UserHistory
 from redash.tasks import Job
 from redash.tasks.queries import enqueue_query
 from redash.utils import (
@@ -86,6 +87,11 @@ def run_query(
         return error_response(
             "Missing parameter value for: {}".format(", ".join(query.missing_params))
         )
+
+    uh = UserHistory(user_id=current_user.id, query_string=query.text)
+    models.db.session.add(uh)
+    logging.info("Added UserHistory: {}".format(uh))
+    models.db.session.commit()
 
     if max_age == 0:
         query_result = None

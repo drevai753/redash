@@ -9,6 +9,7 @@ from rq_scheduler import Scheduler
 
 from redash import extensions, settings, rq_redis_connection, statsd_client
 from redash.tasks import (
+    clear_old_user_history,
     sync_user_details,
     refresh_queries,
     remove_ghost_locks,
@@ -76,6 +77,10 @@ def periodic_job_definitions():
             "timeout": 60,
             "interval": timedelta(minutes=1),
             "result_ttl": 600,
+        },
+        {
+            "func": clear_old_user_history,
+            "interval": timedelta(days=1),
         },
         {
             "func": send_aggregated_errors,

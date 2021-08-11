@@ -14,6 +14,7 @@ import useImmutableCallback from "@/lib/hooks/useImmutableCallback";
 
 import EditableUserProfile from "./components/EditableUserProfile";
 import ReadOnlyUserProfile from "./components/ReadOnlyUserProfile";
+import UserHistory from "./components/UserHistory";
 
 import "./settings.less";
 
@@ -53,6 +54,7 @@ function UserProfile({ userId, onError }) {
             {canEdit && <EditableUserProfile user={user} />}
           </DynamicComponent>
         )}
+        {user && (<UserHistory history={user.history}/>)}
       </div>
     </React.Fragment>
   );
