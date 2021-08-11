@@ -28,7 +28,7 @@ from redash.permissions import (
 )
 from redash.utils import collect_parameters_from_request
 from redash.serializers import QuerySerializer
-from redash.models.parameterized_query import ParameterizedQuery
+from redash.models.parameterized_query import ParameterizedQuery, get_referred_query
 
 
 # Ordering map for relationships
@@ -401,9 +401,23 @@ class QueryResource(BaseResource):
             models.Query.get_by_id_and_org, query_id, self.current_org
         )
         require_access(q, self.current_user, view_only)
-
+        
+        referred = None
+        try:
+            referred = get_referred_query(q.query_text)
+        except:
+            pass
+        
         result = QuerySerializer(q, with_visualizations=True).serialize()
         result["can_edit"] = can_modify(q, self.current_user)
+
+        if referred is not None:
+            rs = QuerySerializer(referred, with_visualizations=True).serialize()
+            other_vis = rs["visualizations"] if "visualizations" in rs else []
+            if "visualizations" in result:
+                result["visualizations"].extend(other_vis)
+            else:
+                result["visualizations"] = other_vis
 
         self.record_event(
             {"action": "view", "object_id": query_id, "object_type": "query"}

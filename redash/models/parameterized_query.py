@@ -114,39 +114,48 @@ def _is_value_within_options(value, dropdown_options, allow_list=False):
         return allow_list and set(map(str, value)).issubset(set(dropdown_options))
     return str(value) in dropdown_options
 
-
-def load_query_text(query_text):
+def get_referred_id(query_text):
     q = query_text.strip().split("_")
     if q[0] == "#!query":
-        try:
-            source_query = models.Query.get_by_id(q[1].split(",")[0])
-            return source_query.query_text
-        except Exception as e:
-            pass #if the query text does not refer to a valid query id, we should return the text as is, without an exception
+        return q[1]
     else:
-        return query_text
-        
+        return None
+
+def get_referred_query(query_text):
+    id = get_referred_id(query_text)
+    if id is not None:
+        return models.Query.get_by_id(id)
+    return None
+
+def load_query_text(query_text):
+    res = query_text
+    try:
+        source_query = get_referred_query(query_text)
+        if source_query is not None:
+            res = source_query.query_text
+    except Exception as e:
+        pass #if the query text does not refer to a valid query id, we should return the text as is, without an exception
+    return res
+
 def load_query_parameters(query):
     return _load_query_parameters(query.query_text, query.parameters)
         
 def _load_query_parameters(query_text, orig_parameters):
-    q = query_text.strip().split("_")
     if orig_parameters is None:
         orig_parameters = []
-    if q[0] == "#!query":
-        try:
-            source_query = models.Query.get_by_id(q[1].split(",")[0])
-            parameters = source_query.parameters
-            param_dict = { param["name"]: param for param in orig_parameters }
-            for index in range(len(parameters)):
-                param = parameters[index]
-                if param["name"] in param_dict and param_dict[param["name"]]["type"] == param["type"]:
-                    parameters[index] = param_dict[param["name"]]
-            return parameters, True
-        except Exception as e:
-            return orig_parameters, False
-    else:
-        return orig_parameters, False
+    try:
+        source_query = get_referred_query(query_text)
+    except Exception as e:
+        source_query = None
+    if source_query is not None:
+        parameters = source_query.parameters
+        param_dict = { param["name"]: param for param in orig_parameters }
+        for index in range(len(parameters)):
+            param = parameters[index]
+            if param["name"] in param_dict and param_dict[param["name"]]["type"] == param["type"]:
+                parameters[index] = param_dict[param["name"]]
+        return parameters, True
+    return orig_parameters, False
 
 class ParameterizedQuery(object):
     def __init__(self, template, schema=None, org=None):
