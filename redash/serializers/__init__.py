@@ -129,6 +129,10 @@ def serialize_query(
         "is_from_source": is_from_source
     }
     
+    if is_from_source:
+        q = query.parameterized.apply({ pp["name"]: pp["value"] for pp in p})
+        d["query_with_parameters"] = q.query
+    
     for key in query.options:
         if key != "parameters":
             d["options"][key] = query.options[key]

@@ -14,6 +14,7 @@ import recordEvent from "@/services/recordEvent";
 import { ExecutionStatus } from "@/services/query-result";
 import routes from "@/services/routes";
 import notification from "@/services/notification";
+import { Query } from "@/services/query";
 import * as queryFormat from "@/lib/queryFormat";
 
 import QueryPageHeader from "./components/QueryPageHeader";
@@ -49,6 +50,26 @@ import "./QuerySource.less";
 function chooseDataSourceId(dataSourceIds, availableDataSources) {
   availableDataSources = map(availableDataSources, ds => ds.id);
   return find(dataSourceIds, id => includes(availableDataSources, id)) || null;
+}
+
+class RenderedQueryTextHolder extends React.Component {
+    constructor(props) {
+        super(props);
+        this.state = {queryText: this.props.queryText};
+    }
+    
+    render() {
+        return <div>
+            <Resizable direction="vertical">
+            <div style={{"height": "120px"}}>
+                <pre style={{"marginBottom":"25px", "maxHeight":"90%", "overflow": "auto"}}>
+                  {this.state.queryText}
+              </pre>
+              </div>
+            </Resizable>
+        </div>
+    }
+    
 }
 
 function QuerySource(props) {
@@ -178,12 +199,25 @@ function QuerySource(props) {
 
   const [isQuerySaving, setIsQuerySaving] = useState(false);
 
+  const renderedQueryTextHolder = useRef(null);
+
+  const updateQueryWithParameters = useCallback(() => {
+      if (query.is_from_source) {
+          Query.get({id: query.id}).then(q => {
+              renderedQueryTextHolder.current.setState({queryText:q.query_with_parameters});
+          });
+      }
+  }, [query]);
+
   const doSaveQuery = useCallback(() => {
     if (!isQuerySaving) {
       setIsQuerySaving(true);
-      saveQuery().finally(() => setIsQuerySaving(false));
+      saveQuery().finally(() => {
+          setIsQuerySaving(false); 
+          updateQueryWithParameters();
+      });
     }
-  }, [isQuerySaving, saveQuery]);
+}, [isQuerySaving, saveQuery, updateQueryWithParameters]);
 
   const addVisualization = useAddVisualizationDialog(query, queryResult, doSaveQuery, (newQuery, visualization) => {
     setQuery(newQuery);
@@ -328,6 +362,7 @@ function QuerySource(props) {
                   </section>
                 </div>
               </Resizable>
+              {query.is_from_source && <RenderedQueryTextHolder ref={renderedQueryTextHolder} queryText={query.query_with_parameters}/>}
 
               {!queryFlags.isNew && <QueryMetadata layout="horizontal" query={query} onEditSchedule={editSchedule} />}
 
