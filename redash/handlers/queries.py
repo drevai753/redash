@@ -116,9 +116,8 @@ class QueryRecentResource(BaseResource):
             results, with_last_modified_by=False, with_user=False
         ).serialize()
 
-
 class BaseQueryListResource(BaseResource):
-    def get_queries(self, search_term):
+    def get_queries(self, search_term, search_only_names):
         if search_term:
             results = models.Query.search(
                 search_term,
@@ -126,6 +125,7 @@ class BaseQueryListResource(BaseResource):
                 self.current_user.id,
                 include_drafts=True,
                 multi_byte_search=current_org.get_setting("multi_byte_search_enabled"),
+                only_names=search_only_names,
             )
         else:
             results = models.Query.all_queries(
@@ -147,8 +147,9 @@ class BaseQueryListResource(BaseResource):
         """
         # See if we want to do full-text search or just regular queries
         search_term = request.args.get("q", "")
+        search_only_names = request.args.get("searchOnlyNames", "0") == "1"
 
-        queries = self.get_queries(search_term)
+        queries = self.get_queries(search_term, search_only_names)
 
         results = filter_by_tags(queries, models.Query.tags)
 

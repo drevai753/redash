@@ -33,6 +33,7 @@ export type ItemsSourceState<ITEM = any> = {
   orderByField: string;
   orderByReverse: boolean;
   searchTerm: string;
+  searchOnlyNames: boolean;
   selectedTags: string[];
   totalCount: number;
   pageItems: ITEM[];

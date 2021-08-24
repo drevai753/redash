@@ -505,6 +505,12 @@ class Query(ChangeTrackingMixin, TimestampMixin, BelongsToOrgMixin, db.Model):
         ),
         nullable=True,
     )
+    search_vector_flat = Column(
+        TSVectorType(
+            "name"
+        ),
+        nullable=True,
+    )
     tags = Column(
         "tags", MutableList.as_mutable(postgresql.ARRAY(db.Unicode)), nullable=True
     )
@@ -699,6 +705,7 @@ class Query(ChangeTrackingMixin, TimestampMixin, BelongsToOrgMixin, db.Model):
         limit=None,
         include_archived=False,
         multi_byte_search=False,
+        only_names=False,
     ):
         all_queries = cls.all_queries(
             group_ids,
@@ -719,11 +726,12 @@ class Query(ChangeTrackingMixin, TimestampMixin, BelongsToOrgMixin, db.Model):
             )
 
         # sort the result using the weight as defined in the search vector column
-        return all_queries.search(term, sort=True).limit(limit)
+        sv = cls.search_vector_flat if only_names else cls.search_vector
+        return all_queries.search(term, sort=True, vector=sv).limit(limit)
 
     @classmethod
     def search_by_user(cls, term, user, limit=None):
-        return cls.by_user(user).search(term, sort=True).limit(limit)
+        return cls.by_user(user).search(term, sort=True, vector=cls.search_vector).limit(limit)
 
     @classmethod
     def recent(cls, group_ids, user_id=None, limit=20):

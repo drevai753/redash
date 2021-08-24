@@ -8,7 +8,7 @@ import DynamicComponent from "@/components/DynamicComponent";
 import { currentUser } from "@/services/auth";
 import HelpTrigger from "@/components/HelpTrigger";
 
-export default function QueriesListEmptyState({ page, searchTerm, selectedTags }) {
+export default function QueriesListEmptyState({ page, searchTerm, searchOnlyNames, selectedTags }) {
   if (searchTerm !== "") {
     return <BigMessage message="Sorry, we couldn't find anything." icon="fa-search" />;
   }
@@ -51,5 +51,6 @@ export default function QueriesListEmptyState({ page, searchTerm, selectedTags }
 QueriesListEmptyState.propTypes = {
   page: PropTypes.string.isRequired,
   searchTerm: PropTypes.string.isRequired,
+  searchOnlyNames: PropTypes.bool.isRequired,
   selectedTags: PropTypes.array.isRequired, // eslint-disable-line react/forbid-prop-types
 };

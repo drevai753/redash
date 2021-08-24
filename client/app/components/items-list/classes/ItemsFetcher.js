@@ -70,13 +70,14 @@ export class PlainListFetcher extends ItemsFetcher {
 // For endpoints that support server-side pagination (return object with
 // items for current page and total items count)
 export class PaginatedListFetcher extends ItemsFetcher {
-  _getRequest({ paginator, sorter, searchTerm, selectedTags }, context) {
+  _getRequest({ paginator, sorter, searchTerm, selectedTags, searchOnlyNames}, context) {
     return this._originalGetRequest(
       {
         page: paginator.page,
         page_size: paginator.itemsPerPage,
         order: sorter.compiled,
         q: isString(searchTerm) && searchTerm !== "" ? searchTerm : undefined,
+        searchOnlyNames: searchOnlyNames === true ? "1" : undefined,
         tags: selectedTags,
       },
       context

@@ -24,6 +24,8 @@ import { currentUser } from "@/services/auth";
 import location from "@/services/location";
 import routes from "@/services/routes";
 
+import Switch from "antd/lib/switch";
+
 import QueriesListEmptyState from "./QueriesListEmptyState";
 
 import "./queries-list.css";
@@ -98,8 +100,9 @@ function QueriesList({ controller }) {
   useEffect(() => {
     const unlistenLocationChanges = location.listen((unused, action) => {
       const searchTerm = location.search.q || "";
-      if (action === "PUSH" && searchTerm !== controllerRef.current.searchTerm) {
-        controllerRef.current.updateSearch(searchTerm);
+      const searchOnlyNames = location.search.searchOnlyNames === "1";
+      if (action === "PUSH" && (searchTerm !== controllerRef.current.searchTerm || searchOnlyNames !== controllerRef.current.searchOnlyNames)) {
+        controllerRef.current.updateSearch(searchTerm, searchOnlyNames);
       }
     });
 
@@ -137,6 +140,16 @@ function QueriesList({ controller }) {
               value={controller.searchTerm}
               onChange={controller.updateSearch}
             />
+            <div>
+                <span style={{"marginRight":"5px"}}>Search only in names</span>
+                <Switch
+                  size="small"
+                  className="toggle-button"
+                  checked={controller.searchOnlyNames}
+                  onChange={controller.updateSearchOnlyNames}
+                  data-test="SearchOnlyNamesToggle"
+                />
+            </div>
             <Sidebar.Menu items={sidebarMenu} selected={controller.params.currentPage} />
             <Sidebar.Tags url="api/queries/tags" onChange={controller.updateSelectedTags} showUnselectAll />
           </Layout.Sidebar>
@@ -145,6 +158,7 @@ function QueriesList({ controller }) {
               <QueriesListEmptyState
                 page={controller.params.currentPage}
                 searchTerm={controller.searchTerm}
+                searchOnlyNames={controller.searchOnlyNames}
                 selectedTags={controller.selectedTags}
               />
             ) : (
