@@ -33,6 +33,9 @@ ARG skip_dev_deps
 
 RUN useradd --create-home redash
 
+# Install multiarch-support
+RUN apt-get install -y wget && wget http://archive.ubuntu.com/ubuntu/pool/main/g/glibc/multiarch-support_2.27-3ubuntu1_amd64.deb && apt-get install -y ./multiarch-support_2.27-3ubuntu1_amd64.deb
+
 # Ubuntu packages
 RUN apt-get update && \
   apt-get install -y \
