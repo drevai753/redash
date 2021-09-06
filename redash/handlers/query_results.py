@@ -87,11 +87,11 @@ def run_query(
         return error_response(
             "Missing parameter value for: {}".format(", ".join(query.missing_params))
         )
-
-    uh = UserHistory(user_id=current_user.id, query_string=query.text)
-    models.db.session.add(uh)
-    logging.info("Added UserHistory: {}".format(uh))
-    models.db.session.commit()
+    if not current_user.is_api_user():
+        uh = UserHistory(user_id=current_user.id, query_string=query.text)
+        models.db.session.add(uh)
+        logging.info("Added UserHistory: {}".format(uh))
+        models.db.session.commit()
 
     if max_age == 0:
         query_result = None
