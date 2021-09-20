@@ -82,6 +82,8 @@ def require_permission(permission):
 def require_any_of_permission(permissions):
     return require_permissions(permissions, True)
 
+def require_all_permissions(permissions):
+    return require_permissions(permissions, False)
 
 def require_admin(fn):
     return require_permission("admin")(fn)

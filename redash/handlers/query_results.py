@@ -15,6 +15,7 @@ from redash.permissions import (
     require_permission,
     require_any_of_permission,
     view_only,
+    require_all_permissions,
 )
 from redash.models.history import UserHistory
 from redash.tasks import Job
@@ -458,6 +459,71 @@ class QueryResultResource(BaseResource):
             "Content-Type": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
         }
         return make_response(serialize_query_result_to_xlsx(query_result), 200, headers)
+
+
+
+
+
+class QueryResultForDataSourceResource(BaseResource):
+
+    @require_any_of_permission(("view_query", "execute_query"))
+    def get(self, query_id=None):
+        """
+        Retrieve query results.
+
+        :param number query_id: The ID of the query whose results should be fetched
+        :query param number maxAge: maximum age of the cached result default is 1 day
+        :query param number dataSourceId: id of the data_source that should be used to execute the query
+        :query param bool applyAutoLimit: flag for query runner to apply auto limit to the query
+        """
+
+        parameter_values = collect_parameters_from_request(request.args)
+        max_age = int(request.args.get("maxAge", 60*60*24))
+        apply_auto_limit = bool(request.args.get("applyAutoLimit", True))
+        data_source_id = int(request.args.get("dataSourceId", -1))
+
+        query = None
+        data_source = None
+
+        if query_id is not None:
+            query = get_object_or_404(
+                models.Query.get_by_id_and_org, query_id, self.current_org
+            )
+        if data_source_id == -1:
+            data_source = query.data_source
+        else:
+            data_source = get_object_or_404(
+                models.DataSource.get_by_id_and_org, data_source_id, self.current_org
+            )
+        #check if we have cached result
+
+        parameterized_query = query.parameterized
+        try:
+            parameterized_query.apply({})
+        except (InvalidParameterError, QueryDetachedFromDataSourceError) as e:
+            abort(400, message=str(e))
+
+        query_text = data_source.query_runner.apply_auto_limit(
+            parameterized_query.text, apply_auto_limit
+        )
+
+        if parameterized_query.missing_params:
+            return error_response(
+                "Missing parameter value for: {}".format(", ".join(parameterized_query.missing_params))
+            )
+
+        query_result = models.QueryResult.get_latest(data_source, query_text, max_age)
+
+        if query_result:
+            return {
+                "query_result": serialize_query_result(
+                    query_result, self.current_user.is_api_user()
+                )
+            }
+        else:
+            if not has_access(data_source, current_user, not_view_only) or not has_access(query, current_user, not_view_only):
+                return error_messages["no_permission"]
+        return run_query(parameterized_query, {}, data_source, query_id, apply_auto_limit, max_age)
 
 
 class JobResource(BaseResource):
