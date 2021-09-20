@@ -362,7 +362,7 @@ function QuerySource(props) {
                   </section>
                 </div>
               </Resizable>
-              {query.is_from_source && <RenderedQueryTextHolder ref={renderedQueryTextHolder} queryText={query.query_with_parameters}/>}
+              {<RenderedQueryTextHolder ref={renderedQueryTextHolder} queryText={query.query_with_parameters}/>}
 
               {!queryFlags.isNew && <QueryMetadata layout="horizontal" query={query} onEditSchedule={editSchedule} />}
 
