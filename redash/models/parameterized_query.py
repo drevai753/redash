@@ -148,7 +148,7 @@ def _load_query_parameters(query_text, orig_parameters):
     except Exception as e:
         source_query = None
     if source_query is not None:
-        parameters = source_query.parameters
+        parameters = [p for p in source_query.parameters]
         param_dict = { param["name"]: param for param in orig_parameters }
         for index in range(len(parameters)):
             param = parameters[index]
