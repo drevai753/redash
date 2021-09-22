@@ -22,7 +22,7 @@ function search(term) {
   }
 
   // search by query
-  return Query.query({ q: term }).then(({ results }) => results);
+  return Query.query({ q: term, searchOnlyNames: "1" }).then(({ results }) => results);
 }
 
 export default function QuerySelector(props) {
