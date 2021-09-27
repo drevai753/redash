@@ -168,6 +168,7 @@ class BaseQueryListResource(BaseResource):
             serializer=QuerySerializer,
             with_stats=True,
             with_last_modified_by=False,
+            with_parameters=False,
         )
 
         if search_term:
@@ -402,13 +403,13 @@ class QueryResource(BaseResource):
             models.Query.get_by_id_and_org, query_id, self.current_org
         )
         require_access(q, self.current_user, view_only)
-        
+
         referred = None
         try:
             referred = get_referred_query(q.query_text)
         except:
             pass
-        
+
         result = QuerySerializer(q, with_visualizations=True).serialize()
         result["can_edit"] = can_modify(q, self.current_user)
 

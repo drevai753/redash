@@ -106,6 +106,7 @@ def serialize_query(
     with_visualizations=False,
     with_user=True,
     with_last_modified_by=True,
+    with_parameters=True,
 ):
     p, is_from_source = load_query_parameters(query)
     d = {
@@ -128,10 +129,11 @@ def serialize_query(
         "is_safe": query.parameterized.is_safe,
         "is_from_source": is_from_source
     }
-    
-    q = query.parameterized.apply({ pp["name"]: pp["value"] for pp in p})
-    d["query_with_parameters"] = q.query
-    
+
+    if with_parameters and is_from_source:
+        q = query.parameterized.apply({ pp["name"]: pp["value"] for pp in p})
+        d["query_with_parameters"] = q.query
+
     for key in query.options:
         if key != "parameters":
             d["options"][key] = query.options[key]
