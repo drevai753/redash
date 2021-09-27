@@ -12,7 +12,7 @@ from rq.timeouts import JobTimeoutException
 from redash import models
 from redash.permissions import has_access, view_only
 from redash.utils import json_loads
-from redash.models.parameterized_query import ParameterizedQuery, load_query_parameters
+from redash.models.parameterized_query import ParameterizedQuery, load_query_parameters, InvalidParameterError
 
 from .query_result import (
     serialize_query_result,
@@ -20,6 +20,7 @@ from .query_result import (
     serialize_query_result_to_xlsx,
 )
 
+import logging
 
 def public_widget(widget):
     res = {
@@ -130,9 +131,12 @@ def serialize_query(
         "is_from_source": is_from_source
     }
 
-    if with_parameters and is_from_source:
-        q = query.parameterized.apply({ pp["name"]: pp["value"] for pp in p})
-        d["query_with_parameters"] = q.query
+    if with_parameters:
+        try:
+            q = query.parameterized.apply({ pp["name"]: pp["value"] for pp in p})
+            d["query_with_parameters"] = q.query
+        except InvalidParameterError as e:
+            logging.warn("Invalid query parameter. Exception: {}".format(e))
 
     for key in query.options:
         if key != "parameters":
