@@ -101,8 +101,11 @@ function QueriesList({ controller }) {
     const unlistenLocationChanges = location.listen((unused, action) => {
       const searchTerm = location.search.q || "";
       const searchOnlyNames = location.search.searchOnlyNames === "1";
-      if (action === "PUSH" && (searchTerm !== controllerRef.current.searchTerm || searchOnlyNames !== controllerRef.current.searchOnlyNames)) {
-        controllerRef.current.updateSearch(searchTerm, searchOnlyNames);
+      const searchOnlyScheduled = location.search.searchOnlyScheduled === "1";
+      if (action === "PUSH" && (searchTerm !== controllerRef.current.searchTerm 
+                                || searchOnlyNames !== controllerRef.current.searchOnlyNames
+                                || searchOnlyScheduled !== controllerRef.current.searchOnlyScheduled)) {
+        controllerRef.current.updateSearch(searchTerm, searchOnlyNames, searchOnlyScheduled);
       }
     });
 
@@ -150,6 +153,16 @@ function QueriesList({ controller }) {
                   data-test="SearchOnlyNamesToggle"
                 />
             </div>
+            <div>
+                <span style={{"marginRight":"5px"}}>Search only scheduled queries</span>
+                <Switch
+                  size="small"
+                  className="toggle-button"
+                  checked={controller.searchOnlyScheduled}
+                  onChange={controller.updateSearchOnlyScheduled}
+                  data-test="SearchOnlyScheduledToggle"
+                />
+            </div>
             <Sidebar.Menu items={sidebarMenu} selected={controller.params.currentPage} />
             <Sidebar.Tags url="api/queries/tags" onChange={controller.updateSelectedTags} showUnselectAll />
           </Layout.Sidebar>
@@ -159,6 +172,7 @@ function QueriesList({ controller }) {
                 page={controller.params.currentPage}
                 searchTerm={controller.searchTerm}
                 searchOnlyNames={controller.searchOnlyNames}
+                searchOnlyScheduled={controller.searchOnlyScheduled}
                 selectedTags={controller.selectedTags}
               />
             ) : (

@@ -30,7 +30,6 @@ from redash.utils import collect_parameters_from_request
 from redash.serializers import QuerySerializer
 from redash.models.parameterized_query import ParameterizedQuery, get_referred_query
 
-
 # Ordering map for relationships
 order_map = {
     "name": "lowercase_name",
@@ -117,7 +116,7 @@ class QueryRecentResource(BaseResource):
         ).serialize()
 
 class BaseQueryListResource(BaseResource):
-    def get_queries(self, search_term, search_only_names):
+    def get_queries(self, search_term, search_only_names, search_only_scheduled):
         if search_term:
             results = models.Query.search(
                 search_term,
@@ -126,10 +125,11 @@ class BaseQueryListResource(BaseResource):
                 include_drafts=True,
                 multi_byte_search=current_org.get_setting("multi_byte_search_enabled"),
                 only_names=search_only_names,
+                only_scheduled=search_only_scheduled,
             )
         else:
             results = models.Query.all_queries(
-                self.current_user.group_ids, self.current_user.id, include_drafts=True
+                self.current_user.group_ids, self.current_user.id, include_drafts=True, include_not_scheduled=not search_only_scheduled
             )
         return filter_by_tags(results, models.Query.tags)
 
@@ -148,8 +148,9 @@ class BaseQueryListResource(BaseResource):
         # See if we want to do full-text search or just regular queries
         search_term = request.args.get("q", "")
         search_only_names = request.args.get("searchOnlyNames", "0") == "1"
+        search_only_scheduled = request.args.get("searchOnlyScheduled", "0") == "1"
 
-        queries = self.get_queries(search_term, search_only_names)
+        queries = self.get_queries(search_term, search_only_names, search_only_scheduled)
 
         results = filter_by_tags(queries, models.Query.tags)
 

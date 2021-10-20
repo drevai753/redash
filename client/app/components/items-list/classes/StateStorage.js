@@ -16,6 +16,7 @@ export class StateStorage {
       orderByReverse: false,
       searchTerm: "",
       searchOnlyNames: false,
+      searchOnlyScheduled: false,
       tags: [],
     });
   }
@@ -32,6 +33,7 @@ export class UrlStateStorage extends StateStorage {
     const searchTerm = params.q || "";
     
     const searchOnlyNames = params.searchOnlyNames === "1" ? "1" : null;
+    const searchOnlyScheduled = params.searchOnlyScheduled === "1" ? "1" : null;
 
     // in search mode order by should be explicitly specified in url, otherwise use default
     const defaultOrderBy =
@@ -46,11 +48,12 @@ export class UrlStateStorage extends StateStorage {
       orderByReverse,
       searchTerm,
       searchOnlyNames,
+      searchOnlyScheduled,
     };
   }
 
   // eslint-disable-next-line class-methods-use-this
-  setState({ page, itemsPerPage, orderByField, orderByReverse, searchTerm, searchOnlyNames }) {
+  setState({ page, itemsPerPage, orderByField, orderByReverse, searchTerm, searchOnlyNames, searchOnlyScheduled }) {
     location.setSearch(
       {
         page,
@@ -58,6 +61,7 @@ export class UrlStateStorage extends StateStorage {
         order: compileOrderBy(orderByField, orderByReverse),
         q: searchTerm !== "" ? searchTerm : null,
         searchOnlyNames: searchOnlyNames === true ? "1" : "0",
+        searchOnlyScheduled: searchOnlyScheduled === true ? "1" : "0",
       },
       true
     );

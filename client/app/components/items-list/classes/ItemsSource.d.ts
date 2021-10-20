@@ -34,6 +34,7 @@ export type ItemsSourceState<ITEM = any> = {
   orderByReverse: boolean;
   searchTerm: string;
   searchOnlyNames: boolean;
+  searchOnlyScheduled: boolean;
   selectedTags: string[];
   totalCount: number;
   pageItems: ITEM[];

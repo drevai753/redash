@@ -556,16 +556,27 @@ class Query(ChangeTrackingMixin, TimestampMixin, BelongsToOrgMixin, db.Model):
 
     @classmethod
     def all_queries(
-        cls, group_ids, user_id=None, include_drafts=False, include_archived=False
+        cls, group_ids, user_id=None, include_drafts=False, include_archived=False, include_not_scheduled=True
     ):
-        query_ids = (
-            db.session.query(distinct(cls.id))
-            .join(
-                DataSourceGroup, Query.data_source_id == DataSourceGroup.data_source_id
+        if not include_not_scheduled:
+            query_ids = (
+                db.session.query(distinct(cls.id))
+                .join(
+                    DataSourceGroup, Query.data_source_id == DataSourceGroup.data_source_id
+                )
+                .filter(Query.is_archived.is_(include_archived))
+                .filter(DataSourceGroup.group_id.in_(group_ids))
+                .filter(Query.schedule.isnot(None))
             )
-            .filter(Query.is_archived.is_(include_archived))
-            .filter(DataSourceGroup.group_id.in_(group_ids))
-        )
+        else:
+            query_ids = (
+                db.session.query(distinct(cls.id))
+                .join(
+                    DataSourceGroup, Query.data_source_id == DataSourceGroup.data_source_id
+                )
+                .filter(Query.is_archived.is_(include_archived))
+                .filter(DataSourceGroup.group_id.in_(group_ids))
+            )
         queries = (
             cls.query.options(
                 joinedload(Query.user),
@@ -706,12 +717,14 @@ class Query(ChangeTrackingMixin, TimestampMixin, BelongsToOrgMixin, db.Model):
         include_archived=False,
         multi_byte_search=False,
         only_names=False,
+        only_scheduled=False,
     ):
         all_queries = cls.all_queries(
             group_ids,
             user_id=user_id,
             include_drafts=include_drafts,
             include_archived=include_archived,
+            include_not_scheduled=not only_scheduled,
         )
 
         if multi_byte_search:

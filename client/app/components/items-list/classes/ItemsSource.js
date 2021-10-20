@@ -35,6 +35,7 @@ export class ItemsSource {
       sorter: this._sorter,
       searchTerm: this._searchTerm,
       searchOnlyNames: this._searchOnlyNames,
+      searchOnlyScheduled: this._searchOnlyScheduled,
       selectedTags: this._selectedTags,
     };
     const customParams = {};
@@ -96,6 +97,7 @@ export class ItemsSource {
       orderByReverse: this._sorter.reverse,
       searchTerm: this._searchTerm,
       searchOnlyNames: this._searchOnlyNames,
+      searchOnlyScheduled: this._searchOnlyScheduled,
       selectedTags: this._selectedTags,
       totalCount: this._paginator.totalCount,
       pageItems: this._pageItems,
@@ -132,10 +134,11 @@ export class ItemsSource {
     this._changed({ sorting: true });
   };
 
-  updateSearch = (searchTerm, searchOnlyNames) => {
+  updateSearch = (searchTerm, searchOnlyNames, searchOnlyScheduled) => {
     // here we update state directly, but later `fetchData` will update it properly
     this._searchTerm = searchTerm;
     if (searchOnlyNames) this._searchOnlyNames = searchOnlyNames;
+    if (searchOnlyScheduled) this._searchOnlyScheduled = searchOnlyScheduled;
     // in search mode ignore the ordering and use the ranking order
     // provided by the server-side FTS backend instead, unless it was
     // requested by the user by actively ordering in search mode
@@ -151,6 +154,13 @@ export class ItemsSource {
   updateSearchOnlyNames = searchOnlyNames => {
     // here we update state directly, but later `fetchData` will update it properly
     this._searchOnlyNames = searchOnlyNames;
+    this._paginator.setPage(1);
+    this._changed({ search: true, pagination: { page: true } });
+  };
+  
+  updateSearchOnlyScheduled = searchOnlyScheduled => {
+    // here we update state directly, but later `fetchData` will update it properly
+    this._searchOnlyScheduled = searchOnlyScheduled;
     this._paginator.setPage(1);
     this._changed({ search: true, pagination: { page: true } });
   };

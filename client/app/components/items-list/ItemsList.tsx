@@ -19,8 +19,10 @@ export interface Controller<I, P = any> {
   // search
   searchTerm?: string;
   searchOnlyNames?: boolean;
+  searchOnlyScheduled?: boolean;
   updateSearch: (searchTerm: string) => void;
   updateSearchOnlyNames: (searchOnlyNames: boolean) => void;
+  updateSearchOnlyScheduled: (searchOnlyScheduled: boolean) => void;
 
   // tags
   selectedTags: string[];
@@ -52,8 +54,10 @@ export const ControllerType = PropTypes.shape({
   // search
   searchTerm: PropTypes.string,
   searchOnlyNames: PropTypes.bool,
+  searchOnlyScheduled: PropTypes.bool,
   updateSearch: PropTypes.func.isRequired, // (searchTerm: string) => void
   updateSearchOnlyNames: PropTypes.func.isRequired, // (searchOnlyNames: string) => void
+  updateSearchOnlyScheduled: PropTypes.func.isRequired, // (searchOnlyScheduled: string) => void
 
   // tags
   selectedTags: PropTypes.array.isRequired,
@@ -143,12 +147,13 @@ export function wrap<I, P = any>(
         this.props.onError!(error);
 
       const initialState = this.getState({ ...itemsSource.getState(), isLoaded: false });
-      const { updatePagination, toggleSorting, updateSearch, updateSearchOnlyNames, updateSelectedTags, update, handleError } = itemsSource;
+      const { updatePagination, toggleSorting, updateSearch, updateSearchOnlyNames, updateSearchOnlyScheduled, updateSelectedTags, update, handleError } = itemsSource;
       this.state = {
         ...initialState,
         toggleSorting, // eslint-disable-line react/no-unused-state
         updateSearch: debounce(updateSearch, 200), // eslint-disable-line react/no-unused-state
         updateSearchOnlyNames: updateSearchOnlyNames,
+        updateSearchOnlyScheduled: updateSearchOnlyScheduled,
         updateSelectedTags, // eslint-disable-line react/no-unused-state
         updatePagination, // eslint-disable-line react/no-unused-state
         update, // eslint-disable-line react/no-unused-state
