@@ -14,8 +14,8 @@ import recordEvent from "@/services/recordEvent";
 import { ExecutionStatus } from "@/services/query-result";
 import routes from "@/services/routes";
 import notification from "@/services/notification";
-import { Query } from "@/services/query";
 import * as queryFormat from "@/lib/queryFormat";
+import Mustache from "mustache";
 
 import QueryPageHeader from "./components/QueryPageHeader";
 import QueryMetadata from "./components/QueryMetadata";
@@ -55,18 +55,30 @@ function chooseDataSourceId(dataSourceIds, availableDataSources) {
 class RenderedQueryTextHolder extends React.Component {
     constructor(props) {
         super(props);
-        this.state = {queryText: this.props.queryText};
+        this.state = {queryText: this.props.queryText, show: this.props.show};
+    }
+    getToggleQueryFn() {
+        let self = this;
+        return function() {
+            self.setState({queryText: self.state.queryText, show: !self.state.show});
+        }
     }
     
     render() {
         return <div>
-            <Resizable direction="vertical">
-            <div style={{"height": "120px"}}>
-                <pre style={{"marginBottom":"25px", "maxHeight":"90%", "overflow": "auto"}}>
-                  {this.state.queryText}
-              </pre>
-              </div>
-            </Resizable>
+            {this.state.show && (
+                <Resizable direction="vertical">
+                <div className="row" style={{minHeight: "120px"}}>
+                    <div style={{textAlign: "center"}}><span onClick={this.getToggleQueryFn()}>Hide</span></div>
+                    <pre style={{"maxHeight":"80%", "overflow": "auto", "paddingBottom": "25px"}}>
+                      {this.state.queryText}
+                  </pre>
+                  </div>
+                </Resizable>
+            )}
+            {!this.state.show && (
+                <div style={{textAlign: "center"}}><span onClick={this.getToggleQueryFn()}>Show query with parameters</span></div>
+            )}
         </div>
     }
     
@@ -202,11 +214,11 @@ function QuerySource(props) {
   const renderedQueryTextHolder = useRef(null);
 
   const updateQueryWithParameters = useCallback(() => {
-      if (query.is_from_source) {
-          Query.get({id: query.id}).then(q => {
-              renderedQueryTextHolder.current.setState({queryText:q.query_with_parameters});
-          });
-      }
+      let params = {};
+      query.options.parameters.forEach( function(param) {
+          params[param.name] = param.value;
+      });
+      renderedQueryTextHolder.current.setState({queryText:Mustache.render(query.query, params), show:renderedQueryTextHolder.current.state.show});
   }, [query]);
 
   const doSaveQuery = useCallback(() => {
@@ -362,7 +374,7 @@ function QuerySource(props) {
                   </section>
                 </div>
               </Resizable>
-              {<RenderedQueryTextHolder ref={renderedQueryTextHolder} queryText={query.query_with_parameters}/>}
+              {<RenderedQueryTextHolder ref={renderedQueryTextHolder} queryText={query.query_with_parameters} show={false}/>}
 
               {!queryFlags.isNew && <QueryMetadata layout="horizontal" query={query} onEditSchedule={editSchedule} />}
 
@@ -378,6 +390,7 @@ function QuerySource(props) {
                       onValuesChange={() => {
                         updateParametersDirtyFlag(false);
                         doExecuteQuery(true);
+                        updateQueryWithParameters();
                       }}
                       onParametersEdit={() => {
                         // save if query clean
