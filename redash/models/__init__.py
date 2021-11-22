@@ -835,7 +835,11 @@ class Query(ChangeTrackingMixin, TimestampMixin, BelongsToOrgMixin, db.Model):
             fv = Visualization(
                 **forked_v
             )  # it will magically add it to `forked_query.visualizations`
-            db.session.add(fv)
+            logging.info("FINDME ___ Createing new visualization id={}".format(fv.id))
+            if (fv.id is not None):
+                logging.info("FINDME ___ id={} is not None. Wont save it".format(fv.id))
+            else:
+                db.session.add(fv)
 
         db.session.add(forked_query)
         return forked_query
