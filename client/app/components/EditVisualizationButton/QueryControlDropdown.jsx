@@ -34,6 +34,13 @@ export default function QueryControlDropdown(props) {
         </Menu.Item>
       )}
       <Menu.Item>
+        <PlainButton
+          onClick={() => props.copyToClipboard(props.query)}
+          data-test="CopyToClipboard">
+          <ShareAltOutlinedIcon /> Copy to clipboard
+        </PlainButton>
+      </Menu.Item>
+      <Menu.Item>
         <QueryResultsLink
           fileType="csv"
           disabled={props.queryExecuting || !props.queryResult.getData || !props.queryResult.getData()}
@@ -83,6 +90,7 @@ QueryControlDropdown.propTypes = {
   queryResult: PropTypes.object, // eslint-disable-line react/forbid-prop-types
   queryExecuting: PropTypes.bool.isRequired,
   showEmbedDialog: PropTypes.func.isRequired,
+  copyToClipboard: PropTypes.func.isRequired,
   embed: PropTypes.bool,
   apiKey: PropTypes.string,
   selectedTab: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),

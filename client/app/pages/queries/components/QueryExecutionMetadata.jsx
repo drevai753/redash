@@ -24,6 +24,29 @@ export default function QueryExecutionMetadata({
   const queryResultData = useQueryResultData(queryResult);
   const openAddToDashboardDialog = useAddToDashboardDialog(query);
   const openEmbedDialog = useEmbedDialog(query);
+  const copyToClipboard = function (query) {
+      let result = "";
+      let header = [];
+      query.queryResult.query_result.data.columns.forEach(function(col) {
+         header.push(col.name); 
+      });
+      result += header.join("\t") + "\n";
+      query.queryResult.query_result.data.rows.forEach(function(r) {
+          let row = [];
+          for (let i = 0; i < header.length; i++) {
+              let key = header[i];
+              row.push(r[key]);
+          }
+          result += row.join("\t") + "\n";
+      });
+      /* eslint-disable */
+      if (navigator.clipboard)
+          navigator.clipboard.writeText(result).then(function(){}, function(){
+              window.console.log("Copy failed");
+          })
+      else alert("Copy not supported");
+      /* eslint-enable */
+  };
   return (
     <div className="query-execution-metadata">
       <span className="m-r-5">
@@ -32,6 +55,7 @@ export default function QueryExecutionMetadata({
           queryResult={queryResult}
           queryExecuting={isQueryExecuting}
           showEmbedDialog={openEmbedDialog}
+          copyToClipboard={copyToClipboard}
           embed={false}
           apiKey={query.api_key}
           selectedTab={selectedVisualization}
