@@ -83,10 +83,9 @@ WORKDIR /app
 ENV PIP_DISABLE_PIP_VERSION_CHECK=1
 ENV PIP_NO_CACHE_DIR=1
 
-# rollback pip version to avoid legacy resolver problem
-RUN pip install pip==20.2.4;
+RUN pip install --upgrade pip setuptools wheel;
 RUN pip install Cython;
-
+RUN apt update -y && apt install cmake -y;
 # We first copy only the requirements file, to avoid rebuilding on every file change.
 COPY requirements_all_ds.txt ./
 RUN if [ "x$skip_ds_deps" = "x" ] ; then pip install -r requirements_all_ds.txt ; else echo "Skipping pip install -r requirements_all_ds.txt" ; fi
