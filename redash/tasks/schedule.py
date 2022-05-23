@@ -68,7 +68,7 @@ class StatsdRecordingScheduler(Scheduler):
                 job = j
                 break
         if job is None:
-            job = super(StatsdRecordingScheduler, self).schedule(**kwargs)
+            job = super(StatsdRecordingScheduler, self).schedule(scheduled_time=scheduled_time, id=id, **kwargs)
         if job.meta.get("interval", None) is not None and job.meta.get("repeat", None) is None:
             self.persistent_jobs[job.id] = job
             logger.info("Scheduled persistent job: {}".format(job))
