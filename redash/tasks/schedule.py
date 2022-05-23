@@ -42,25 +42,27 @@ class StatsdRecordingScheduler(Scheduler):
         lost_ids = [id for id in self.persistent_jobs]
         for job in jobs:
             self.enqueue_job(job)
-            present = self.connection.zrangebyscore(self.scheduled_jobs_key, 0, "+inf")
-            if bytes(job.id, "utf-8") in present:
-                lost_ids.remove(job.id)
+        present = self.connection.zrangebyscore(self.scheduled_jobs_key, 0, "+inf")
+        logger.info("Found scheduled jobs: {}".format(present))
+        for job_id in self.persistent_jobs:
+            if bytes(job_id, "utf-8") in present:
+                lost_ids.remove(job_id)
         for id in lost_ids:
             try:
-                job = self.job_class(id=id, connection=self.connection)
+                job = self.persistent_jobs[id]
                 job.refresh()
                 interval = job.meta.get("interval", None)
                 self.connection.zadd(self.scheduled_jobs_key, {job.id: to_unix(datetime.utcnow()) + int(interval)})
                 jobs.append(job)
             except Exception as e:
-                logger.warn("Failed to schedule job. Id={}  --  ".format(id, e))
+                logger.warn("Failed to schedule job. Id={}  --  {}".format(id, e))
                 
         return jobs
 
     def schedule(self, **kwargs):
         job = super(StatsdRecordingScheduler, self).schedule(**kwargs)
         if job.meta.get("interval", None) is not None and job.meta.get("repeat", None) is None:
-            self.persistent_jobs.append(job.id)
+            self.persistent_jobs[job.id] = job
         return job
 
 
