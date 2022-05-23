@@ -46,7 +46,7 @@ class StatsdRecordingScheduler(Scheduler):
         logger.info("Found scheduled jobs: {}".format(present))
         for job_id in self.persistent_jobs:
             if bytes(job_id, "utf-8") in present:
-                lost_ids.remove(job_id)
+                lost_ids.remove(bytes(job_id, "utf-8"))
         for id in lost_ids:
             try:
                 job = self.persistent_jobs[id]
