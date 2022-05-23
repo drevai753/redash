@@ -45,8 +45,9 @@ class StatsdRecordingScheduler(Scheduler):
         present = self.connection.zrangebyscore(self.scheduled_jobs_key, 0, "+inf")
         logger.info("Found scheduled jobs: {}".format(present))
         for job_id in self.persistent_jobs:
-            if bytes(job_id, "utf-8") in present:
-                lost_ids.remove(bytes(job_id, "utf-8"))
+            if bytes(job_id, "utf-8") in present and job_id in lost_ids:
+                lost_ids.remove(job_id)
+        logger.info("Found lost jobs: {}".format(lost_ids))
         for id in lost_ids:
             try:
                 job = self.persistent_jobs[id]
@@ -59,10 +60,18 @@ class StatsdRecordingScheduler(Scheduler):
                 
         return jobs
 
-    def schedule(self, **kwargs):
-        job = super(StatsdRecordingScheduler, self).schedule(**kwargs)
+    def schedule(self, scheduled_time, id, **kwargs):
+        jobs = self.get_jobs()
+        job = None
+        for j in jobs:
+            if j.id == id:
+                job = j
+                break
+        if job is None:
+            job = super(StatsdRecordingScheduler, self).schedule(**kwargs)
         if job.meta.get("interval", None) is not None and job.meta.get("repeat", None) is None:
             self.persistent_jobs[job.id] = job
+            logger.info("Scheduled persistent job: {}".format(job))
         return job
 
 
@@ -148,7 +157,7 @@ def schedule_periodic_jobs(jobs):
     )
 
     jobs_to_schedule = [
-        job for job in job_definitions if job_id(job) not in rq_scheduler
+        job for job in job_definitions
     ]
 
     for job in jobs_to_clean_up:
