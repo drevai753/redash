@@ -74,6 +74,7 @@ class AlertsList extends React.Component {
       }
     ),
     Columns.timeAgo.sortable({ title: "Last Updated At", field: "updated_at", width: "1%" }),
+    Columns.dateTime.sortable({ title: "Checked At", field: "checked_at", width: "1%" }),
     Columns.dateTime.sortable({ title: "Created At", field: "created_at", width: "1%" }),
   ];
 

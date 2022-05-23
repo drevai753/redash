@@ -221,6 +221,7 @@ def serialize_alert(alert, full=True):
         "updated_at": alert.updated_at,
         "created_at": alert.created_at,
         "rearm": alert.rearm,
+        "checked_at": alert.query_rel.retrieved_at
     }
 
     if full:
