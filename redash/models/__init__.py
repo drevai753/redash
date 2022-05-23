@@ -665,6 +665,7 @@ class Query(ChangeTrackingMixin, TimestampMixin, BelongsToOrgMixin, db.Model):
         scheduled_queries_executions.refresh()
 
         for query in queries:
+            logger.info("[OUTDATED_QUERIES] Checking if query: {} is outdated".format(query.id))
             try:
                 if query.schedule.get("disabled"):
                     continue
@@ -680,7 +681,7 @@ class Query(ChangeTrackingMixin, TimestampMixin, BelongsToOrgMixin, db.Model):
                 retrieved_at = scheduled_queries_executions.get(query.id) or (
                     query.latest_query_data and query.latest_query_data.retrieved_at
                 )
-
+                logger.info("[OUTDATED_QUERIES] Query: {} retrieved at: {} schedule: {}".format(query.id, retrieved_at, query.schedule))
                 if should_schedule_next(
                     retrieved_at or now,
                     now,
@@ -691,6 +692,8 @@ class Query(ChangeTrackingMixin, TimestampMixin, BelongsToOrgMixin, db.Model):
                 ):
                     key = "{}:{}".format(query.query_hash, query.data_source_id)
                     outdated_queries[key] = query
+                else:
+                    logger.info("[OUTDATED_QUERIES] Query: {} should not be scheduled".format(query.id))
             except Exception as e:
                 query.schedule["disabled"] = True
                 db.session.commit()
