@@ -33,7 +33,7 @@ class StatsdRecordingScheduler(Scheduler):
     
     def __init__(self, **kwargs):
         super(StatsdRecordingScheduler, self).__init__(**kwargs)
-        self.persistent_jobs = []
+        self.persistent_jobs = {}
     
     def enqueue_jobs(self):
         self.log.debug("Checking for scheduled jobs")
