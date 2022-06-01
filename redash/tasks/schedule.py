@@ -51,7 +51,6 @@ class StatsdRecordingScheduler(Scheduler):
         for id in lost_ids:
             try:
                 job = self.persistent_jobs[id]
-                job.refresh()
                 interval = job.meta.get("interval", None)
                 self.connection.zadd(self.scheduled_jobs_key, {job.id: to_unix(datetime.utcnow()) + int(interval)})
                 jobs.append(job)
