@@ -47,10 +47,10 @@ class ParameterValueInput extends React.Component {
     }
     let that = this;
     this.observer = new ResizeObserver(function(e) {
-        if (that.width) {
+        if (that.width && that.myRef.current) {
             that.myRef.current.style.width = that.width + "px";
             that.width = null;
-        } else {
+        } else if (that.myRef.current) {
             localStorage.setItem(that.storageKey, that.myRef.current.clientWidth);
         }
     });
