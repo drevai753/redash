@@ -39,6 +39,21 @@ class ParameterValueInput extends React.Component {
 
   constructor(props) {
     super(props);
+    this.myRef = React.createRef();
+    this.storageKey = "size_" + this.props.parameter.name + "_" + this.props.parameter.parentQueryId;
+    this.width = null;
+    if (localStorage[this.storageKey]) {
+        this.width = localStorage[this.storageKey];
+    }
+    let that = this;
+    this.observer = new ResizeObserver(function(e) {
+        if (that.width) {
+            that.myRef.current.style.width = that.width + "px";
+            that.width = null;
+        } else {
+            localStorage.setItem(that.storageKey, that.myRef.current.clientWidth);
+        }
+    });
     this.state = {
       value: props.parameter.hasPendingValue ? props.parameter.pendingValue : props.value,
       isDirty: props.parameter.hasPendingValue,
@@ -61,6 +76,10 @@ class ParameterValueInput extends React.Component {
     this.setState({ value, isDirty });
     this.props.onSelect(value, isDirty);
   };
+  
+  componentDidMount = function() {
+      this.observer.observe(this.myRef.current);
+  }
 
   renderDateParameter() {
     const { type, parameter } = this.props;
@@ -186,7 +205,7 @@ class ParameterValueInput extends React.Component {
     const { isDirty } = this.state;
 
     return (
-      <div className="parameter-input" data-dirty={isDirty || null} data-test="ParameterValueInput">
+      <div className="parameter-input" data-dirty={isDirty || null} ref={this.myRef} data-test="ParameterValueInput">
         {this.renderInput()}
       </div>
     );
