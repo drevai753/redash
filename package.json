@@ -56,6 +56,7 @@
     "debug": "^3.1.0",
     "dompurify": "^2.0.7",
     "font-awesome": "^4.7.0",
+    "gyp": "^0.5.0",
     "history": "^4.10.1",
     "hoist-non-react-statics": "^3.3.0",
     "markdown": "0.5.0",
@@ -183,7 +184,7 @@
   "browserslist": [
     "Edge >= 15",
     "Firefox >= 52",
-    "Chrome >= 55",
+    "Chrome >= 65",
     "Safari >= 10.1",
     "iOS >= 10.3",
     "Opera >= 42",
