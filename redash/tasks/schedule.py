@@ -3,6 +3,7 @@ import logging
 import hashlib
 import json
 from datetime import datetime, timedelta
+import calendar
 
 from rq.job import Job
 from rq_scheduler import Scheduler
@@ -23,6 +24,9 @@ from redash.tasks import (
 
 logger = logging.getLogger(__name__)
 
+def to_unix(dt):
+    """Converts a datetime object to unixtime"""
+    return calendar.timegm(dt.utctimetuple())
 
 class StatsdRecordingScheduler(Scheduler):
     """
