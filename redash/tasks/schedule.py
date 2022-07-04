@@ -42,7 +42,7 @@ class StatsdRecordingScheduler(Scheduler):
     def enqueue_jobs(self):
         self.log.debug("Checking for scheduled jobs")
 
-        jobs = self.get_jobs_to_queue()
+        jobs = list(self.get_jobs_to_queue())
         lost_ids = [id for id in self.persistent_jobs]
         for job in jobs:
             self.enqueue_job(job)
@@ -56,7 +56,7 @@ class StatsdRecordingScheduler(Scheduler):
             try:
                 job = self.persistent_jobs[id]
                 interval = job.meta.get("interval", None)
-                self.connection.zadd(self.scheduled_jobs_key, {job.id: to_unix(datetime.utcnow()) + int(interval)})
+                self.connection.zadd(self.scheduled_jobs_key, {job.id: to_unix(datetime.utcnow())})
                 jobs.append(job)
             except Exception as e:
                 logger.warn("Failed to schedule job. Id={}  --  {}".format(id, e))
