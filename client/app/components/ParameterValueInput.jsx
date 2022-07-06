@@ -42,7 +42,7 @@ class ParameterValueInput extends React.Component {
     this.myRef = React.createRef();
     this.storageKey = "size_" + this.props.parameter.name + "_" + this.props.parameter.parentQueryId;
     this.width = null;
-    if (localStorage[this.storageKey]) {
+    if (localStorage[this.storageKey] && Number(localStorage[this.storageKey]) > 30) {
         this.width = localStorage[this.storageKey];
     }
     let that = this;
